@@ -1,3 +1,5 @@
-data/*
+data
 tutorials/*
 .venv/*
+Trained/
+tmp
