@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iRecognise — Neuromorphic Federated Edge AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #060a0f;
+      --surface: #0d1520;
+      --border: #1a2a3a;
+      --accent: #00e5ff;
+      --accent2: #ff6b35;
+      --text: #c8d8e8;
+      --text-dim: #5a7a8a;
+      --white: #e8f4f8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 4rem;
+      background: rgba(6,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--accent); }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8rem 4rem 6rem;
+      overflow: hidden;
+    }
+
+    .hero-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .hero-tag::before {
+      content: '';
+      width: 40px; height: 1px;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 800;
+      line-height: 1.0;
+      color: var(--white);
+      margin-bottom: 1rem;
+    }
+
+    h1 span {
+      color: var(--accent);
+      display: block;
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 3rem;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-orange {
+      background: transparent;
+      color: var(--accent2);
+      border-color: var(--accent2);
+    }
+
+    .btn-orange:hover {
+      background: var(--accent2);
+      color: var(--bg);
+    }
+
+    /* Pulse orb */
+    .orb {
+      position: absolute;
+      right: -100px; top: 50%;
+      transform: translateY(-50%);
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+      animation: pulse 6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translateY(-50%) scale(1); opacity: 0.6; }
+      50% { transform: translateY(-50%) scale(1.1); opacity: 1; }
+    }
+
+    /* ── Stats strip ── */
+    .stats {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat {
+      padding: 2.5rem 3rem;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.2rem;
+      color: var(--accent);
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Section wrapper ── */
+    section {
+      position: relative; z-index: 1;
+      padding: 6rem 4rem;
+    }
+
+    .section-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 1rem;
+      line-height: 1.15;
+    }
+
+    .section-lead {
+      font-size: 1rem;
+      color: var(--text-dim);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 3rem;
+    }
+
+    /* ── About grid ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .about-card {
+      background: var(--surface);
+      padding: 2.5rem;
+    }
+
+    .about-card h3 {
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .about-card p {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    /* ── Architecture ── */
+    .arch-section { background: var(--surface); }
+
+    .arch-diagram {
+      border: 1px solid var(--border);
+      padding: 3rem;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0;
+      align-items: center;
+      margin-bottom: 3rem;
+      overflow-x: auto;
+    }
+
+    .arch-node {
+      border: 1px solid var(--accent);
+      padding: 1.5rem;
+      text-align: center;
+      background: rgba(0,229,255,0.04);
+    }
+
+    .arch-node.orange { border-color: var(--accent2); background: rgba(255,107,53,0.04); }
+
+    .arch-node-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .arch-node.orange .arch-node-label { color: var(--accent2); }
+
+    .arch-node-text {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .arch-arrow {
+      font-family: 'Space Mono', monospace;
+      color: var(--text-dim);
+      font-size: 1.2rem;
+      padding: 0 1rem;
+      white-space: nowrap;
+    }
+
+    .components-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .component {
+      background: var(--bg);
+      padding: 2rem;
+    }
+
+    .component-icon {
+      width: 36px; height: 36px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .component h4 {
+      font-size: 0.85rem;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+
+    .component p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ── Methods ── */
+    .methods-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .method-card {
+      background: var(--bg);
+      padding: 2.5rem;
+      transition: background 0.25s;
+    }
+
+    .method-card:hover { background: var(--surface); }
+
+    .method-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .method-card h3 {
+      font-size: 1rem;
+      color: var(--white);
+      margin-bottom: 0.75rem;
+    }
+
+    .method-card p {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    .method-tag {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.25rem 0.75rem;
+      border: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Results ── */
+    .results-section { background: var(--surface); }
+
+    .results-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .result-block {
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      background: var(--bg);
+    }
+
+    .result-block h3 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .result-block p, .result-block li {
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .result-block ul { padding-left: 1.2rem; }
+    .result-block li { margin-bottom: 0.5rem; }
+
+    .finding {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .finding:last-child { border-bottom: none; }
+
+    .finding-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent2);
+      flex-shrink: 0;
+      margin-top: 0.4rem;
+    }
+
+    .finding p {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* ── Deliverables ── */
+    .deliverables {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .deliverable-card {
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      transition: border-color 0.25s;
+    }
+
+    .deliverable-card:hover { border-color: var(--accent); }
+
+    .deliverable-type {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .deliverable-card h3 {
+      font-size: 1.3rem;
+      color: var(--white);
+      line-height: 1.2;
+    }
+
+    .deliverable-card p {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    .deliverable-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .meta-pill {
+      padding: 0.25rem 0.75rem;
+      border: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 3rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-left {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--accent); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up {
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards;
+    }
+
+    .fade-up:nth-child(1) { animation-delay: 0.1s; }
+    .fade-up:nth-child(2) { animation-delay: 0.25s; }
+    .fade-up:nth-child(3) { animation-delay: 0.4s; }
+    .fade-up:nth-child(4) { animation-delay: 0.55s; }
+
+    @media (max-width: 900px) {
+      nav { padding: 1rem 2rem; }
+      .nav-links { display: none; }
+      .hero { padding: 7rem 2rem 4rem; }
+      section { padding: 4rem 2rem; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .about-grid, .results-layout, .deliverables { grid-template-columns: 1fr; }
+      .methods-grid { grid-template-columns: 1fr; }
+      .components-row { grid-template-columns: 1fr 1fr; }
+      .arch-diagram { display: block; }
+      .arch-arrow { display: none; }
+      footer { padding: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <span class="nav-logo">iRecognise—</span>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#methods">Methods</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#deliverables">Deliverables</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="orb"></div>
+    <p class="hero-tag fade-up">Imperial College London · MSc Computing</p>
+    <h1 class="fade-up">
+      Neuromorphic <span>Federated</span> Edge AI
+    </h1>
+    <p class="hero-sub fade-up">
+      Exploring Spiking Neural Networks and decentralised federated learning on constrained edge devices using Intel's Lava framework and the neuromorphic computing paradigm.
+    </p>
+    <div class="hero-btns fade-up">
+      <a href="Report.pdf" class="btn btn-primary" target="_blank">↓ Report</a>
+      <a href="Presentation.pdf" class="btn btn-orange" target="_blank">↓ Presentation</a>
+      <a href="https://github.com/BeanBois/iRecognise-" class="btn btn-secondary" target="_blank">GitHub ↗</a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">SNN</span>
+      <span class="stat-label">Spiking Neural Network</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">R-STDP</span>
+      <span class="stat-label">Reward-Modulated Learning</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">4×</span>
+      <span class="stat-label">Raspberry Pi 3B Nodes</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">Lava</span>
+      <span class="stat-label">Intel Neuromorphic Framework</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <p class="section-tag">01 — About</p>
+    <h2>Brain-Inspired Computing<br>for the Edge</h2>
+    <p class="section-lead">
+      Classical computing AI struggles at the constrained edge. This project investigates how the neuromorphic paradigm — sparse, event-driven, distributed — maps naturally onto decentralised federated learning.
+    </p>
+    <div class="about-grid">
+      <div class="about-card">
+        <h3>Problem</h3>
+        <p>Edge devices like cameras and sensors lack the compute needed for modern AI. The Von Neumann bottleneck, dense synchronous computation, and centralised federated architectures all compound this limitation.</p>
+      </div>
+      <div class="about-card">
+        <h3>Approach</h3>
+        <p>Neuromorphic Computing encodes intelligence in temporal spike patterns across interconnected neurons, collocating memory and computation. This maps naturally to the sparse, asynchronous nature of edge workloads.</p>
+      </div>
+      <div class="about-card">
+        <h3>Task</h3>
+        <p>Surveillance camera facial/mask recognition — a real-world constrained edge AI task — used to benchmark the neuromorphic model under simulated day, night, and rain conditions.</p>
+      </div>
+      <div class="about-card">
+        <h3>Contribution</h3>
+        <p>A fully custom SNN inference pipeline with R-STDP learning and a decentralised federated protocol (Broadcaster / Listener / Updater) implemented in Python using Intel's Lava framework.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="architecture" class="arch-section">
+    <p class="section-tag">02 — Architecture</p>
+    <h2>System Architecture</h2>
+    <p class="section-lead">
+      Four interacting entities form a fully decentralised federated learning system. Each edge node runs all four models concurrently.
+    </p>
+
+    <div class="arch-diagram">
+      <div class="arch-node">
+        <div class="arch-node-label">Input</div>
+        <div class="arch-node-text">Image → Grayscale → Hilbert binning → Poisson spike encoding</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-label">SNN Core</div>
+        <div class="arch-node-text">10×200 excitatory + 2×400 inhibitory neurons, WTA competition</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node orange">
+        <div class="arch-node-label">Federated</div>
+        <div class="arch-node-text">Broadcaster → Listener → Updater over HTTP. No central server.</div>
+      </div>
+    </div>
+
+    <div class="components-row">
+      <div class="component">
+        <div class="component-icon">🧠</div>
+        <h4>Inference Model</h4>
+        <p>SNN-based binary classifier. Excitatory and inhibitory modules in a Winner-Takes-All topology.</p>
+      </div>
+      <div class="component">
+        <div class="component-icon">📡</div>
+        <h4>Broadcaster</h4>
+        <p>Monitors RSTDP synapse weight deltas. Broadcasts averaged updates every 100 steps with a device ID.</p>
+      </div>
+      <div class="component">
+        <div class="component-icon">👂</div>
+        <h4>Listener</h4>
+        <p>Receives broadcasts, converts device ID to spikes, passes through Reservoir Computing to assess trust.</p>
+      </div>
+      <div class="component">
+        <div class="component-icon">🔄</div>
+        <h4>Updater</h4>
+        <p>Reservoir-based decision module. Approves or rejects incoming weight updates based on accuracy delta.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHODS -->
+  <section id="methods">
+    <p class="section-tag">03 — Methods</p>
+    <h2>Learning Techniques</h2>
+    <p class="section-lead">
+      Standard backpropagation does not apply to SNNs. Three complementary learning strategies are employed.
+    </p>
+
+    <div class="methods-grid">
+      <div class="method-card">
+        <div class="method-num">01</div>
+        <h3>Spike Timing Dependent Plasticity</h3>
+        <p>Synaptic weights are strengthened when pre-synaptic neurons fire before post-synaptic ones (Δt > 0), and weakened otherwise. Implemented via Lava's LearningDense and STDPLoihi abstractions.</p>
+        <span class="method-tag">STDP</span>
+      </div>
+      <div class="method-card">
+        <div class="method-num">02</div>
+        <h3>Reward-Modulated STDP</h3>
+        <p>Extends classical STDP with a neuromodulatory reward signal M(t) ∈ {+1, −1}. For binary classification, the WTA setup naturally integrates rewards by toggling A+ and A− signs based on predicted vs actual labels.</p>
+        <span class="method-tag">R-STDP</span>
+      </div>
+      <div class="method-card">
+        <div class="method-num">03</div>
+        <h3>Reservoir Computing</h3>
+        <p>A fixed, randomly connected pool of 200 LIF neurons acts as dynamic memory for the Updater. The output layer trains a weighted sum to approve or reject weight updates from other devices with delayed reward signals.</p>
+        <span class="method-tag">RC</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="results-section">
+    <p class="section-tag">04 — Results</p>
+    <h2>Findings & Evaluation</h2>
+    <p class="section-lead">
+      The experiment revealed key limitations of current neuromorphic software running on classical hardware — and pointed to promising directions.
+    </p>
+
+    <div class="results-layout">
+      <div class="result-block">
+        <h3>Hardware Results</h3>
+        <div class="finding">
+          <div class="finding-dot"></div>
+          <p>Lava's parallelism is implemented as threads — this causes severe performance degradation on Raspberry Pi 3B's limited multi-threading (1 GB RAM, OOM killed).</p>
+        </div>
+        <div class="finding">
+          <div class="finding-dot"></div>
+          <p>Even on an M1 MacBook Pro (16 GB), the model was computationally expensive and did not converge after 12+ hours of training.</p>
+        </div>
+        <div class="finding">
+          <div class="finding-dot"></div>
+          <p>Response rate of ~13–14 responses/minute achieved but fell below expectations for a constrained edge device.</p>
+        </div>
+        <div class="finding">
+          <div class="finding-dot"></div>
+          <p>R-STDP did not function as expected — WTA competition caused groups to inhibit each other during learning, producing noisy weight updates.</p>
+        </div>
+      </div>
+
+      <div class="result-block">
+        <h3>Evaluation & Outlook</h3>
+        <p style="margin-bottom:1.2rem;">Despite experimental limitations, the theoretical case for neuromorphic edge AI remains strong:</p>
+        <ul>
+          <li>Researchers with dedicated neuromorphic hardware show energy efficiency gains over classical AI, with competitive accuracy on some tasks.</li>
+          <li>Commercial investment from IBM, Intel, BrainChip, and Innatera signals long-term viability.</li>
+          <li>Open-source platforms like Lava enable community growth and iterative improvement.</li>
+          <li>Neuromorphic properties — sparsity, asynchrony, in-memory compute — are architecturally well-suited to the federated edge scenario.</li>
+        </ul>
+        <p style="margin-top:1.2rem; font-size:0.82rem; color: var(--text-dim); font-family: 'Space Mono', monospace;">
+          "Neuromorphic Computing is not yet ready to tackle complex tasks with limited computing resources — but it will get there."
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DELIVERABLES -->
+  <section id="deliverables">
+    <p class="section-tag">05 — Deliverables</p>
+    <h2>Project Outputs</h2>
+    <p class="section-lead">
+      Full research report and presentation slides are available below.
+    </p>
+
+    <div class="deliverables">
+      <div class="deliverable-card">
+        <span class="deliverable-type">Document · PDF</span>
+        <h3>Research Report</h3>
+        <p>Full 19-page paper covering neuromorphic computing principles, hardware/software landscape, federated learning challenges, system implementation, and experimental results.</p>
+        <div class="deliverable-meta">
+          <span class="meta-pill">IEEE Format</span>
+          <span class="meta-pill">~50 References</span>
+          <span class="meta-pill">Imperial College London</span>
+        </div>
+        <a href="Report.pdf" class="btn btn-primary" target="_blank">↓ Download Report</a>
+      </div>
+
+      <div class="deliverable-card">
+        <span class="deliverable-type">Slides · PDF</span>
+        <h3>Presentation</h3>
+        <p>Slide deck summarising the motivation, background, experimental design, implementation details, and findings of the neuromorphic federated edge AI project.</p>
+        <div class="deliverable-meta">
+          <span class="meta-pill">Presentation Deck</span>
+          <span class="meta-pill">Visual Summary</span>
+        </div>
+        <a href="Presentation.pdf" class="btn btn-orange" target="_blank">↓ Download Slides</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      <strong style="color: var(--white);">iRecognise—</strong><br>
+      Teoh Kai Shun · Imperial College London · Dept. of Computing<br>
+      Supervisor: Eiman Kanjo
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/BeanBois/iRecognise-" target="_blank">GitHub ↗</a>
+      <a href="Report.pdf" target="_blank">Report ↗</a>
+      <a href="Presentation.pdf" target="_blank">Slides ↗</a>
+    </div>
+  </footer>
+
+</body>
+</html>
