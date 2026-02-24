@@ -3,3 +3,4 @@ tutorials/*
 .venv/*
 Trained/
 tmp
+__pycache__/
